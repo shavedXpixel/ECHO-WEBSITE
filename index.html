@@ -14,7 +14,25 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <meta name="theme-color" content="#080808">
+  <meta name="theme-color" content="#FAFAFA">
+
+  <!-- Instant Theme Persistence (Prevents Dark/Light FOUC) -->
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('echo_theme');
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', '#0B0B0B');
+        } else {
+          document.documentElement.classList.remove('dark');
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', '#FAFAFA');
+        }
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- Tailwind CSS v3 with Plugins -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -47,16 +65,48 @@
     rel="stylesheet">
   <link rel="stylesheet" href="FlexCarousel.css">
   <style>
+    :root {
+      --bg-page: #FAFAFA;
+      --text-primary: #121212;
+      --text-secondary: #525252;
+      --card-bg: #FFFFFF;
+      --border-color: #E5E5E5;
+    }
+
+    html.dark {
+      --bg-page: #0B0B0B;
+      --text-primary: #F5F5F5;
+      --text-secondary: #B8B8B8;
+      --card-bg: #151515;
+      --border-color: #262626;
+      color-scheme: dark;
+    }
+
+    html {
+      color-scheme: light;
+    }
+
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: #FAFAFA;
       color: #121212;
       overflow-x: clip;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    html.dark body {
+      background-color: #0B0B0B;
+      color: #F5F5F5;
     }
 
     ::selection {
       background: #000;
       color: #fff;
+    }
+
+    .dark ::selection {
+      background: #fff;
+      color: #000;
     }
 
     .no-scrollbar::-webkit-scrollbar {
@@ -234,52 +284,146 @@
       transform: translateY(0);
       opacity: 1;
     }
+
+    /* Dark mode component styles */
+    .dark .metallic-title {
+      background: linear-gradient(180deg, #FFFFFF 0%, #D4D4D4 35%, #9E9E9E 60%, #6E6E6E 85%, #505050 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dark .circle-btn {
+      border-color: #333333;
+    }
+    .dark .circle-btn:hover {
+      border-color: #ffffff;
+      background-color: #1e1e1e;
+    }
+
+    .dark .pill-btn {
+      border-color: #333333;
+    }
+    .dark .pill-btn:hover {
+      border-color: #ffffff;
+    }
+
+    /* ============================================================
+       VIEW TRANSITIONS & ORGANIC INK WASH SPREAD (SHUIMOHUA)
+       ============================================================ */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+      mix-blend-mode: normal;
+      display: block;
+    }
+
+    /* Light to Dark: new dark screen reveals on top through organic ink mask */
+    html.light-to-dark::view-transition-old(root) {
+      z-index: 1;
+    }
+    html.light-to-dark::view-transition-new(root) {
+      z-index: 9999;
+      clip-path: url(#ink-clip-path);
+    }
+
+    /* Dark to Light: old dark screen on top recedes back into toggle origin */
+    html.dark-to-light::view-transition-old(root) {
+      z-index: 9999;
+      clip-path: url(#ink-clip-path);
+    }
+    html.dark-to-light::view-transition-new(root) {
+      z-index: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation: none !important;
+      }
+      #ink-transition-svg {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
-<body class="antialiased text-[#111] bg-[#FAFAFA]">
+<body class="antialiased text-[#111] dark:text-[#F5F5F5] bg-[#FAFAFA] dark:bg-[#0B0B0B]">
+
+  <!-- ============================================================
+       TRADITIONAL CHINESE INK WASH (SHUIMOHUA) TRANSITION ASSETS
+       ============================================================ -->
+  <svg id="ink-transition-svg" aria-hidden="true" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999999; display: none;">
+    <defs>
+      <!-- Rice Paper Fibers & Ink Wash Capillary Bleed Filter -->
+      <filter id="ink-paper-bleed" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+        <!-- Multi-octave fractal noise simulating Xuan paper fibers and capillary bleeding -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.016 0.022" numOctaves="4" seed="42" result="paperFibers" />
+        <feDisplacementMap in="SourceGraphic" in2="paperFibers" scale="95" xChannelSelector="R" yChannelSelector="G" result="displacedInk" />
+        <!-- Subtle edge feathering mimicking ink wash diffusion into paper -->
+        <feGaussianBlur in="displacedInk" stdDeviation="1.8" result="featheredBleed" />
+        <feMerge>
+          <feMergeNode in="displacedInk" />
+          <feMergeNode in="featheredBleed" opacity="0.65" />
+        </feMerge>
+      </filter>
+
+      <!-- Dynamic Organic ClipPath for View Transition Masking -->
+      <clipPath id="ink-clip-path" clipPathUnits="userSpaceOnUse">
+        <path id="ink-clip-path-el" d="" />
+        <g id="ink-clip-satellites"></g>
+      </clipPath>
+    </defs>
+
+    <!-- Visual Ink Wash Layer with Displacement & Bleed Feathering -->
+    <g id="ink-render-layer" filter="url(#ink-paper-bleed)">
+      <path id="ink-render-path" fill="#0B0B0B" d="" />
+      <g id="ink-render-satellites" fill="#0B0B0B"></g>
+    </g>
+  </svg>
 
   <!-- Notification Toast Container -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- BEGIN: Navigation Header -->
   <header
-    class="relative z-40 bg-[#FAFAFA] transition-all duration-300 w-full pt-6 pb-4 px-6 md:px-14 max-w-[1400px] mx-auto flex items-center justify-between"
+    class="relative z-40 bg-[#FAFAFA] dark:bg-[#0B0B0B] transition-all duration-300 w-full pt-6 pb-4 px-6 md:px-14 max-w-[1400px] mx-auto flex items-center justify-between"
     data-purpose="site-navigation">
     <!-- Brand Wordmark -->
-    <a class="group font-extrabold text-xl tracking-tight text-black flex items-center" href="#home">
+    <a class="group font-extrabold text-xl tracking-tight text-black dark:text-white flex items-center" href="#home">
       <span>PRIYANSU</span>
       <span
-        class="inline-block w-2 h-2 bg-black rounded-full ml-1 transition-transform group-hover:scale-150 duration-200"></span>
+        class="inline-block w-2 h-2 bg-black dark:bg-white rounded-full ml-1 transition-transform group-hover:scale-150 duration-200"></span>
     </a>
 
     <!-- Center Navigation Links (Pill with no unwanted wrapping) -->
     <nav
-      class="hidden md:flex items-center gap-1 p-1 bg-white/95 border border-[#E2E2E2] rounded-full shadow-sm text-xs font-semibold tracking-wider text-neutral-600">
+      class="hidden md:flex items-center gap-1 p-1 bg-white/95 dark:bg-[#151515]/95 border border-[#E2E2E2] dark:border-[#282828] rounded-full shadow-sm text-xs font-semibold tracking-wider text-neutral-600 dark:text-neutral-400">
       <a id="nav-home"
-        class="nav-link px-4 py-2 rounded-full border border-neutral-300 text-black hover:border-black transition whitespace-nowrap"
+        class="nav-link px-4 py-2 rounded-full border border-neutral-300 dark:border-neutral-600 text-black dark:text-white hover:border-black dark:hover:border-white transition whitespace-nowrap"
         href="#home">HOME</a>
       <a id="nav-about"
-        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 hover:text-black transition whitespace-nowrap"
+        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:text-black dark:hover:text-white transition whitespace-nowrap"
         href="#about">ABOUT</a>
       <a id="nav-experience"
-        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 hover:text-black transition whitespace-nowrap"
+        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:text-black dark:hover:text-white transition whitespace-nowrap"
         href="#experience">JOURNEY</a>
       <a id="nav-projects"
-        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 hover:text-black transition whitespace-nowrap"
+        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:text-black dark:hover:text-white transition whitespace-nowrap"
         href="#projects">FEATURED</a>
       <a id="nav-landing-pages"
-        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 hover:text-black transition whitespace-nowrap"
+        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:text-black dark:hover:text-white transition whitespace-nowrap"
         href="#landing-pages">SYSTEMS</a>
       <a id="nav-services"
-        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 hover:text-black transition whitespace-nowrap"
+        class="nav-link px-4 py-2 rounded-full border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 hover:text-black dark:hover:text-white transition whitespace-nowrap"
         href="#services">FOCUS AREAS</a>
     </nav>
 
-    <!-- Right Social & Contact Links -->
-    <div class="flex items-center gap-1.5 md:gap-2 p-1.5 bg-white/95 border border-[#E2E2E2] rounded-full shadow-sm">
+    <!-- Right Social, Theme Toggle & Contact Links -->
+    <div class="flex items-center gap-1.5 md:gap-2 p-1.5 bg-white/95 dark:bg-[#151515]/95 border border-[#E2E2E2] dark:border-[#282828] rounded-full shadow-sm">
       <!-- Verified GitHub Profile -->
-      <a class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 transition text-neutral-700 hover:text-black"
+      <a class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white"
         href="https://github.com/shavedXpixel" target="_blank" rel="noopener noreferrer" title="GitHub — Priyansu Dash">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
           <path fill-rule="evenodd" clip-rule="evenodd"
@@ -288,7 +432,7 @@
       </a>
 
       <!-- Verified LinkedIn Profile -->
-      <a class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 transition text-neutral-700 hover:text-black"
+      <a class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white"
         href="https://linkedin.com/in/shavedxpixel" target="_blank" rel="noopener noreferrer"
         title="LinkedIn — Priyansu Dash">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -297,15 +441,30 @@
         </svg>
       </a>
 
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle-btn" type="button" onclick="handleThemeToggle(event)"
+        class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white"
+        aria-label="Switch to dark mode" title="Switch to dark mode">
+        <!-- Moon Icon (Visible in Light Mode) -->
+        <svg class="w-4 h-4 block dark:hidden transform transition-transform duration-300 rotate-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+        <!-- Sun Icon (Visible in Dark Mode) -->
+        <svg class="w-4 h-4 hidden dark:block text-amber-300 transform transition-transform duration-300 rotate-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+      </button>
+
       <!-- Quick Contact Button -->
       <button onclick="openContactModal()"
-        class="px-3.5 py-1.5 rounded-full bg-black text-white text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-800 transition">
+        class="px-3.5 py-1.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-[10px] font-bold tracking-wider uppercase hover:bg-neutral-800 dark:hover:bg-neutral-200 transition">
         CONNECT
       </button>
 
       <!-- Mobile Hamburger Button -->
       <button id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open Menu"
-        class="md:hidden w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 transition text-neutral-700 ml-1">
+        class="md:hidden w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition text-neutral-700 dark:text-neutral-300 ml-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <line x1="4" x2="20" y1="7" y2="7"></line>
           <line x1="4" x2="20" y1="12" y2="12"></line>
@@ -319,44 +478,57 @@
   <div id="mobile-drawer"
     class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex justify-end">
     <div id="mobile-drawer-content"
-      class="w-4/5 max-w-sm bg-white h-full p-8 flex flex-col justify-between transform translate-x-full transition-transform duration-300 shadow-2xl">
+      class="w-4/5 max-w-sm bg-white dark:bg-[#141414] text-neutral-900 dark:text-neutral-100 border-l border-transparent dark:border-neutral-800 h-full p-8 flex flex-col justify-between transform translate-x-full transition-transform duration-300 shadow-2xl">
       <div>
-        <div class="flex items-center justify-between pb-6 border-b border-neutral-200">
+        <div class="flex items-center justify-between pb-6 border-b border-neutral-200 dark:border-neutral-800">
           <span class="font-extrabold text-lg tracking-tight">PRIYANSU DASH•</span>
           <button onclick="toggleMobileMenu()"
-            class="w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center text-neutral-700 hover:border-black">
+            class="w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white"
+            aria-label="Close mobile menu">
             ✕
           </button>
         </div>
-        <nav class="flex flex-col gap-4 mt-8 text-base font-bold tracking-wider">
+
+        <!-- Mobile Appearance Toggle -->
+        <div class="flex items-center justify-between py-2.5 px-3.5 my-5 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+          <span class="text-xs font-bold tracking-wider uppercase text-neutral-700 dark:text-neutral-300">Theme</span>
+          <button id="mobile-theme-toggle-btn" type="button" onclick="handleThemeToggle(event)"
+            class="px-3 py-1.5 rounded-full bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white flex items-center gap-2 hover:border-black dark:hover:border-white transition shadow-sm"
+            aria-label="Switch to dark mode">
+            <span id="mobile-theme-text">Dark Mode</span>
+            <span id="mobile-theme-icon">☾</span>
+          </button>
+        </div>
+
+        <nav class="flex flex-col gap-4 mt-4 text-base font-bold tracking-wider">
           <a onclick="toggleMobileMenu()" href="#home"
-            class="py-2 border-b border-neutral-100 hover:text-neutral-500">HOME</a>
+            class="py-2 border-b border-neutral-100 dark:border-neutral-800/80 hover:text-neutral-500 dark:hover:text-neutral-400">HOME</a>
           <a onclick="toggleMobileMenu()" href="#about"
-            class="py-2 border-b border-neutral-100 hover:text-neutral-500">ABOUT</a>
+            class="py-2 border-b border-neutral-100 dark:border-neutral-800/80 hover:text-neutral-500 dark:hover:text-neutral-400">ABOUT</a>
           <a onclick="toggleMobileMenu()" href="#experience"
-            class="py-2 border-b border-neutral-100 hover:text-neutral-500">JOURNEY</a>
+            class="py-2 border-b border-neutral-100 dark:border-neutral-800/80 hover:text-neutral-500 dark:hover:text-neutral-400">JOURNEY</a>
           <a onclick="toggleMobileMenu()" href="#projects"
-            class="py-2 border-b border-neutral-100 hover:text-neutral-500">FEATURED</a>
+            class="py-2 border-b border-neutral-100 dark:border-neutral-800/80 hover:text-neutral-500 dark:hover:text-neutral-400">FEATURED</a>
           <a onclick="toggleMobileMenu()" href="#landing-pages"
-            class="py-2 border-b border-neutral-100 hover:text-neutral-500">SYSTEMS</a>
+            class="py-2 border-b border-neutral-100 dark:border-neutral-800/80 hover:text-neutral-500 dark:hover:text-neutral-400">SYSTEMS</a>
           <a onclick="toggleMobileMenu()" href="#services"
-            class="py-2 border-b border-neutral-100 hover:text-neutral-500">FOCUS AREAS</a>
+            class="py-2 border-b border-neutral-100 dark:border-neutral-800/80 hover:text-neutral-500 dark:hover:text-neutral-400">FOCUS AREAS</a>
           <a onclick="toggleMobileMenu(); openContactModal();" href="javascript:void(0)"
-            class="py-2 text-black hover:underline">CONTACT</a>
+            class="py-2 text-black dark:text-white hover:underline">CONTACT</a>
         </nav>
       </div>
-      <div class="pt-6 border-t border-neutral-200">
-        <p class="text-xs uppercase tracking-widest text-neutral-400 mb-1">PRIYANSU DASH</p>
-        <p class="text-xs text-neutral-800 font-semibold">Data Science Engineer &amp; Full-Stack Developer</p>
-        <p class="text-[10px] text-neutral-500 font-mono mt-1">B.Tech CSE-DS &bull; EATM (BPUT) '28</p>
-        <p class="text-[10px] text-neutral-400 font-mono">Bhubaneswar, Odisha, India</p>
-        <div class="flex items-center gap-3 mt-3 pt-3 border-t border-neutral-100">
+      <div class="pt-6 border-t border-neutral-200 dark:border-neutral-800">
+        <p class="text-xs uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mb-1">PRIYANSU DASH</p>
+        <p class="text-xs text-neutral-800 dark:text-neutral-200 font-semibold">Data Science Engineer &amp; Full-Stack Developer</p>
+        <p class="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono mt-1">B.Tech CSE-DS &bull; EATM (BPUT) '28</p>
+        <p class="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono">Bhubaneswar, Odisha, India</p>
+        <div class="flex items-center gap-3 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
           <a href="https://github.com/shavedXpixel" target="_blank" rel="noopener noreferrer"
-            class="text-neutral-600 hover:text-black text-xs font-mono">GITHUB ↗</a>
+            class="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-xs font-mono">GITHUB ↗</a>
           <a href="https://linkedin.com/in/shavedxpixel" target="_blank" rel="noopener noreferrer"
-            class="text-neutral-600 hover:text-black text-xs font-mono">LINKEDIN ↗</a>
+            class="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-xs font-mono">LINKEDIN ↗</a>
           <a href="https://www.priyansu.me/" target="_blank" rel="noopener noreferrer"
-            class="text-neutral-600 hover:text-black text-xs font-mono">WEBSITE ↗</a>
+            class="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-xs font-mono">WEBSITE ↗</a>
         </div>
       </div>
     </div>
@@ -371,7 +543,7 @@
       <h1 id="hero-title"
         class="text-[9.5vw] md:text-[8rem] lg:text-[9.5rem] font-extrabold uppercase leading-[0.85] tracking-tight">
         <span class="block relative z-30">
-          <span class="text-[#121212]">EXPLORE MY</span>
+          <span class="text-[#121212] dark:text-[#F5F5F5]">EXPLORE MY</span>
         </span>
         <span class="block relative z-10">
           <span class="metallic-title">PORTFOLIO</span>
@@ -385,11 +557,11 @@
       <!-- Left Column: Developer info & Arrow -->
       <div
         class="md:col-span-3 flex flex-col items-start md:items-start pl-2 md:pl-6 order-2 md:order-1 pt-6 md:pt-0 relative z-30">
-        <span class="text-xs font-bold tracking-wider uppercase text-neutral-800 mb-6">DATA SCIENCE ENGINEER &bull;
+        <span class="text-xs font-bold tracking-wider uppercase text-neutral-800 dark:text-neutral-200 mb-6">DATA SCIENCE ENGINEER &bull;
           FULL-STACK DEVELOPER</span>
-        <a class="circle-btn w-14 h-14 md:w-16 md:h-16 border-neutral-300" href="#about"
+        <a class="circle-btn w-14 h-14 md:w-16 md:h-16 border-neutral-300 dark:border-neutral-700" href="#about"
           aria-label="Scroll to About Section">
-          <svg class="w-5 h-5 text-neutral-800 transform rotate-45" fill="none" stroke="currentColor" stroke-width="1.8"
+          <svg class="w-5 h-5 text-neutral-800 dark:text-neutral-200 transform rotate-45" fill="none" stroke="currentColor" stroke-width="1.8"
             viewBox="0 0 24 24">
             <path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
@@ -411,23 +583,23 @@
         class="md:col-span-3 flex flex-col items-start md:items-end text-left order-3 pt-6 md:pt-0 pr-2 md:pr-6 space-y-10 relative z-30">
         <!-- Pitch Quote -->
         <p
-          class="text-[11px] md:text-xs uppercase font-medium leading-relaxed tracking-wider text-neutral-700 max-w-[240px] text-left">
+          class="text-[11px] md:text-xs uppercase font-medium leading-relaxed tracking-wider text-neutral-700 dark:text-neutral-300 max-w-[240px] text-left">
           "I BUILD PRACTICAL SOFTWARE AND EXPLORE INTELLIGENT SYSTEMS."
         </p>
 
         <!-- Discipline List with hover interaction -->
         <div
-          class="flex flex-col space-y-3 text-[11px] md:text-xs font-semibold tracking-widest text-neutral-600 uppercase">
+          class="flex flex-col space-y-3 text-[11px] md:text-xs font-semibold tracking-widest text-neutral-600 dark:text-neutral-400 uppercase">
           <a href="#services" onclick="selectService(0)"
-            class="hover:text-black hover:translate-x-1 md:hover:-translate-x-1 transition-all inline-flex items-center gap-1.5">
+            class="hover:text-black dark:hover:text-white hover:translate-x-1 md:hover:-translate-x-1 transition-all inline-flex items-center gap-1.5">
             <span>DATA SCIENCE &amp; ML</span>
           </a>
           <a href="#services" onclick="selectService(1)"
-            class="hover:text-black hover:translate-x-1 md:hover:-translate-x-1 transition-all inline-flex items-center gap-1.5 font-bold text-black">
+            class="hover:text-black dark:hover:text-white hover:translate-x-1 md:hover:-translate-x-1 transition-all inline-flex items-center gap-1.5 font-bold text-black dark:text-white">
             <span>FULL-STACK DEVELOPMENT</span>
           </a>
           <a href="#services" onclick="selectService(2)"
-            class="hover:text-black hover:translate-x-1 md:hover:-translate-x-1 transition-all inline-flex items-center gap-1.5">
+            class="hover:text-black dark:hover:text-white hover:translate-x-1 md:hover:-translate-x-1 transition-all inline-flex items-center gap-1.5">
             <span>CORE SOFTWARE &amp; CLOUD</span>
           </a>
         </div>
@@ -792,8 +964,8 @@
     data-purpose="featured-projects" id="projects">
     <!-- Header -->
     <div class="mb-8">
-      <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-1">CURATED SYSTEMS</span>
-      <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tight text-neutral-900">
+      <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1">CURATED SYSTEMS</span>
+      <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-100">
         FEATURED PROJECTS
       </h2>
     </div>
@@ -801,7 +973,7 @@
     <!-- Dynamic Projects Content Area with FlexCarousel -->
     <div id="projects-content" class="w-full">
       <div id="flex-carousel-container"
-        class="rounded-3xl border border-neutral-200 bg-[#EFEFEF] overflow-hidden shadow-inner"
+        class="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-[#EFEFEF] dark:bg-[#141414] overflow-hidden shadow-inner dark:shadow-[inset_0_2px_8px_rgba(0,0,0,0.6)]"
         style="width: 100%; height: 560px; position: relative;">
         <!-- FlexCarousel mounts here -->
       </div>
@@ -815,13 +987,13 @@
     <!-- Header with Title -->
     <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-1">INTERACTIVE 3D DRUM
+        <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1">INTERACTIVE 3D DRUM
           REEL</span>
-        <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tight text-neutral-900">
+        <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-100">
           PROJECT GALLERY &amp; SYSTEMS
         </h2>
       </div>
-      <p class="text-xs font-medium text-neutral-500 uppercase tracking-wider max-w-sm">
+      <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider max-w-sm">
         COMPUTER VISION, MACHINE LEARNING MODELS, METEOROLOGICAL FORECASTING, AND FINANCIAL REGRESSION ENGINES.
       </p>
     </div>
@@ -840,12 +1012,12 @@
     data-purpose="services-section" id="services">
     <!-- Centered Header -->
     <div class="text-center max-w-2xl mx-auto mb-14">
-      <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-1">DEVELOPMENT
+      <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1">DEVELOPMENT
         CAPABILITIES</span>
-      <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tight text-neutral-900 mb-4">
+      <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-100 mb-4">
         AREAS OF FOCUS &amp; EXPERTISE
       </h2>
-      <p class="text-xs md:text-xs uppercase font-medium leading-relaxed tracking-wider text-neutral-500">
+      <p class="text-xs md:text-xs uppercase font-medium leading-relaxed tracking-wider text-neutral-500 dark:text-neutral-400">
         DATA SCIENCE &amp; APPLIED AI, MODERN FULL-STACK WEB ENGINEERING, AND SCALABLE BACKEND ARCHITECTURES.
       </p>
     </div>
@@ -855,46 +1027,46 @@
 
       <!-- Item 1: DATA SCIENCE & MACHINE LEARNING -->
       <div id="service-0" onclick="toggleService(0)"
-        class="accordion-item w-full flex flex-col px-6 py-4 rounded-3xl border border-neutral-300 bg-white hover:border-black transition-all cursor-pointer"
+        class="accordion-item w-full flex flex-col px-6 py-4 rounded-3xl border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-[#151515] hover:border-black dark:hover:border-neutral-600 transition-all cursor-pointer"
         role="button" tabindex="0" aria-expanded="false">
         <div class="flex items-center justify-between">
           <span
-            class="item-badge w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center text-xs font-medium text-neutral-700">1</span>
-          <span class="item-title text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-800">DATA SCIENCE
+            class="item-badge w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-xs font-medium text-neutral-700 dark:text-neutral-300">1</span>
+          <span class="item-title text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-800 dark:text-neutral-200">DATA SCIENCE
             &amp; MACHINE LEARNING</span>
           <div
-            class="item-icon w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center transition-transform rotate-0">
-            <svg class="w-3.5 h-3.5 text-neutral-700 transition-colors" fill="none" stroke="currentColor"
+            class="item-icon w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center transition-transform rotate-0">
+            <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300 transition-colors" fill="none" stroke="currentColor"
               stroke-width="2" viewBox="0 0 24 24">
               <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
           </div>
         </div>
         <div class="accordion-content">
-          <p class="text-xs text-neutral-500 leading-relaxed max-w-2xl mb-4">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl mb-4">
             Exploratory data analysis, statistical modeling, machine learning pipelines, and predictive regression
             models using Python, Pandas, NumPy, and scikit-learn.
           </p>
-          <div class="flex items-center justify-between border-t border-neutral-200 pt-3">
-            <span class="text-[11px] font-mono text-neutral-400">STACK: PYTHON &bull; PANDAS &bull; NUMPY &bull;
+          <div class="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800 pt-3">
+            <span class="text-[11px] font-mono text-neutral-400 dark:text-neutral-500">STACK: PYTHON &bull; PANDAS &bull; NUMPY &bull;
               SCIKIT-LEARN &bull; JOBLIB</span>
             <button onclick="event.stopPropagation(); bookSpecificService('Data Science & Predictive Modeling');"
-              class="text-xs font-bold underline hover:text-neutral-600">CONNECT ↗</button>
+              class="text-xs font-bold underline text-neutral-900 dark:text-neutral-100 hover:text-neutral-600 dark:hover:text-white">CONNECT ↗</button>
           </div>
         </div>
       </div>
 
       <!-- Item 2: FULL-STACK WEB DEVELOPMENT (Active by default) -->
       <div id="service-1" onclick="toggleService(1)"
-        class="accordion-item active w-full flex flex-col px-6 py-4 rounded-3xl border border-black bg-black text-white shadow-xl cursor-pointer transition-all transform scale-[1.01]"
+        class="accordion-item active w-full flex flex-col px-6 py-4 rounded-3xl border border-black dark:border-neutral-600 bg-black dark:bg-[#222222] text-white shadow-xl cursor-pointer transition-all transform scale-[1.01]"
         role="button" tabindex="0" aria-expanded="true">
         <div class="flex items-center justify-between">
           <span
-            class="item-badge w-8 h-8 rounded-full border border-neutral-700 flex items-center justify-center text-xs font-medium text-neutral-300">2</span>
+            class="item-badge w-8 h-8 rounded-full border border-neutral-700 dark:border-neutral-600 flex items-center justify-center text-xs font-medium text-neutral-300 dark:text-neutral-200">2</span>
           <span class="item-title text-xs md:text-sm font-bold tracking-widest uppercase text-white">FULL-STACK WEB
             DEVELOPMENT</span>
           <div
-            class="item-icon w-8 h-8 rounded-full border border-neutral-700 flex items-center justify-center transition-transform rotate-180">
+            class="item-icon w-8 h-8 rounded-full border border-neutral-700 dark:border-neutral-600 flex items-center justify-center transition-transform rotate-180">
             <svg class="w-3.5 h-3.5 text-white transition-colors" fill="none" stroke="currentColor" stroke-width="2"
               viewBox="0 0 24 24">
               <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -906,7 +1078,7 @@
             Engineering responsive, practical web applications with React, Next.js, TypeScript, and Tailwind CSS. Modern
             state workflows, clean component hierarchy, and rapid deployment.
           </p>
-          <div class="flex items-center justify-between border-t border-neutral-800 pt-3">
+          <div class="flex items-center justify-between border-t border-neutral-800 dark:border-neutral-700 pt-3">
             <span class="text-[11px] font-mono text-neutral-400">STACK: REACT &bull; NEXT.JS &bull; TYPESCRIPT &bull;
               TAILWIND CSS &bull; HTML &bull; CSS</span>
             <button onclick="event.stopPropagation(); bookSpecificService('Full-Stack Web Development');"
@@ -917,31 +1089,31 @@
 
       <!-- Item 3: BACKEND ARCHITECTURE & DATABASES -->
       <div id="service-2" onclick="toggleService(2)"
-        class="accordion-item w-full flex flex-col px-6 py-4 rounded-3xl border border-neutral-300 bg-white hover:border-black transition-all cursor-pointer"
+        class="accordion-item w-full flex flex-col px-6 py-4 rounded-3xl border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-[#151515] hover:border-black dark:hover:border-neutral-600 transition-all cursor-pointer"
         role="button" tabindex="0" aria-expanded="false">
         <div class="flex items-center justify-between">
           <span
-            class="item-badge w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center text-xs font-medium text-neutral-700">3</span>
-          <span class="item-title text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-800">BACKEND
+            class="item-badge w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-xs font-medium text-neutral-700 dark:text-neutral-300">3</span>
+          <span class="item-title text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-800 dark:text-neutral-200">BACKEND
             ARCHITECTURE &amp; DATABASES</span>
           <div
-            class="item-icon w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center transition-transform rotate-0">
-            <svg class="w-3.5 h-3.5 text-neutral-700 transition-colors" fill="none" stroke="currentColor"
+            class="item-icon w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center transition-transform rotate-0">
+            <svg class="w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300 transition-colors" fill="none" stroke="currentColor"
               stroke-width="2" viewBox="0 0 24 24">
               <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
           </div>
         </div>
         <div class="accordion-content">
-          <p class="text-xs text-neutral-500 leading-relaxed max-w-2xl mb-4">
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl mb-4">
             Server-side engineering with Node.js and Express.js, Java application development, relational and document
             database management with MySQL, MongoDB, and PostgreSQL.
           </p>
-          <div class="flex items-center justify-between border-t border-neutral-200 pt-3">
-            <span class="text-[11px] font-mono text-neutral-400">STACK: NODE.JS &bull; EXPRESS.JS &bull; JAVA &bull;
+          <div class="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800 pt-3">
+            <span class="text-[11px] font-mono text-neutral-400 dark:text-neutral-500">STACK: NODE.JS &bull; EXPRESS.JS &bull; JAVA &bull;
               MYSQL &bull; MONGODB &bull; POSTGRESQL</span>
             <button onclick="event.stopPropagation(); bookSpecificService('Core Java & Backend Architecture');"
-              class="text-xs font-bold underline hover:text-neutral-600">CONNECT ↗</button>
+              class="text-xs font-bold underline text-neutral-900 dark:text-neutral-100 hover:text-neutral-600 dark:hover:text-white">CONNECT ↗</button>
           </div>
         </div>
       </div>
@@ -949,69 +1121,69 @@
     </div>
 
     <!-- Categorized Technical Skills Section -->
-    <div id="skills" class="max-w-4xl mx-auto mt-16 pt-12 border-t border-neutral-200">
+    <div id="skills" class="max-w-4xl mx-auto mt-16 pt-12 border-t border-neutral-200 dark:border-neutral-800">
       <div class="mb-8">
-        <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 block mb-1">TECHNICAL TOOLKIT</span>
-        <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-neutral-900">
+        <span class="text-xs font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1">TECHNICAL TOOLKIT</span>
+        <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-100">
           TECHNICAL SKILLS &amp; TECHNOLOGIES
         </h3>
-        <p class="text-xs text-neutral-500 uppercase tracking-wider mt-1">
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mt-1">
           Documented technical stack from portfolio and practical engineering
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Programming Languages -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">PROGRAMMING
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">PROGRAMMING
             LANGUAGES</span>
-          <p class="text-sm font-semibold text-neutral-900">Python, JavaScript, TypeScript, Java</p>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">Python, JavaScript, TypeScript, Java</p>
         </div>
 
         <!-- Frontend -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">FRONTEND</span>
-          <p class="text-sm font-semibold text-neutral-900">HTML, CSS, React, Next.js, Tailwind CSS</p>
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">FRONTEND</span>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">HTML, CSS, React, Next.js, Tailwind CSS</p>
         </div>
 
         <!-- Backend -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">BACKEND</span>
-          <p class="text-sm font-semibold text-neutral-900">Node.js, Express.js</p>
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">BACKEND</span>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">Node.js, Express.js</p>
         </div>
 
         <!-- Databases -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">DATABASES</span>
-          <p class="text-sm font-semibold text-neutral-900">MySQL, MongoDB, PostgreSQL</p>
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">DATABASES</span>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">MySQL, MongoDB, PostgreSQL</p>
         </div>
 
         <!-- Data Science & Machine Learning -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">DATA SCIENCE &amp;
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">DATA SCIENCE &amp;
             MACHINE LEARNING</span>
-          <p class="text-sm font-semibold text-neutral-900">Pandas, NumPy, scikit-learn</p>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">Pandas, NumPy, scikit-learn</p>
         </div>
 
         <!-- Cloud & Deployment -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">CLOUD &amp;
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">CLOUD &amp;
             DEPLOYMENT</span>
-          <p class="text-sm font-semibold text-neutral-900">Firebase, Supabase, Vercel</p>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">Firebase, Supabase, Vercel</p>
         </div>
 
         <!-- Developer Tools -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">DEVELOPER
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">DEVELOPER
             TOOLS</span>
-          <p class="text-sm font-semibold text-neutral-900">Git, GitHub, Visual Studio Code, Jupyter Notebook</p>
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">Git, GitHub, Visual Studio Code, Jupyter Notebook</p>
         </div>
 
         <!-- Other Technologies -->
-        <div class="p-5 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1.5">OTHER
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1.5">OTHER
             TECHNOLOGIES</span>
-          <p class="text-sm font-semibold text-neutral-900">Google Gemini, Joblib, pgvector, Firebase Firestore,
+          <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-200">Google Gemini, Joblib, pgvector, Firebase Firestore,
             Firebase Authentication, Framer Motion, Recharts, shadcn/ui, Vite, Flask, Render, Android development</p>
         </div>
       </div>
@@ -1021,73 +1193,73 @@
 
   <!-- BEGIN: Verified Certifications & Credentials Section -->
   <section
-    class="max-w-[1400px] mx-auto px-6 md:px-14 py-16 border-t border-b border-neutral-200 scroll-mt-20 md:scroll-mt-24"
+    class="max-w-[1400px] mx-auto px-6 md:px-14 py-16 border-t border-b border-neutral-200 dark:border-neutral-800 scroll-mt-20 md:scroll-mt-24"
     data-purpose="certifications-section" id="certifications">
     <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
       <div class="shrink-0 lg:max-w-xs">
-        <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 block mb-1">ACCREDITATIONS &amp;
+        <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500 block mb-1">ACCREDITATIONS &amp;
           CERTIFICATIONS</span>
-        <h3 class="text-2xl font-black uppercase tracking-tight text-neutral-900">VERIFIED CREDENTIALS</h3>
-        <p class="text-xs text-neutral-500 uppercase tracking-wider mt-2">SEVEN VERIFIED CERTIFICATIONS</p>
+        <h3 class="text-2xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-100">VERIFIED CREDENTIALS</h3>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mt-2">SEVEN VERIFIED CERTIFICATIONS</p>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 w-full flex-1">
         <!-- 1 -->
         <a href="https://www.coursera.org/account/accomplishments/professional-cert/EPKUEVVQD9U3" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 01</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 01</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">IBM AI Developer</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">Coursera Professional Certificate (IBM)</span>
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">IBM AI Developer</p>
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">Coursera Professional Certificate (IBM)</span>
           </div>
         </a>
 
         <!-- 2 -->
         <a href="https://www.coursera.org/account/accomplishments/verify/3DFHVHXF4F4N" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 02</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 02</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">Developing AI
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">Developing AI
               Applications with Python and Flask</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">Coursera / IBM</span>
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">Coursera / IBM</span>
           </div>
         </a>
 
         <!-- 3 -->
         <a href="https://www.coursera.org/account/accomplishments/verify/RW3DPPQW7U2I" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 03</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 03</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">The Data Science
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">The Data Science
               Profession – Student View</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">Coursera</span>
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">Coursera</span>
           </div>
         </a>
 
         <!-- 4 -->
         <a href="https://drive.google.com/file/d/1JhdXC8XMbsqdt37WjvnqVKGh-bAZSszm/view?usp=sharing" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 04</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 04</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">Bootcamp on Big Data
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">Bootcamp on Big Data
               &amp; Data Science</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">C-DAC Noida</span>
-            <span class="text-[9px] font-mono text-neutral-400 block mt-1">Ref ID:
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">C-DAC Noida</span>
+            <span class="text-[9px] font-mono text-neutral-400 dark:text-neutral-500 block mt-1">Ref ID:
               FSP/BCMP/C-DAC/NOI/B01/2507/1654/338154</span>
           </div>
         </a>
@@ -1095,45 +1267,45 @@
         <!-- 5 -->
         <a href="https://drive.google.com/file/d/1bYEcIWZTxeA8w5tHiTKcaRS88zk9QBJc/view?usp=sharing" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 05</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 05</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">Artificial Intelligence
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">Artificial Intelligence
               and Machine Learning</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">Internshala Trainings</span>
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">Internshala Trainings</span>
           </div>
         </a>
 
         <!-- 6 -->
         <a href="https://www.coursera.org/account/accomplishments/verify/KLBRG34CSOQ7" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 06</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 06</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">Computer Networks and
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">Computer Networks and
               Network Security</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">Coursera</span>
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">Coursera</span>
           </div>
         </a>
 
         <!-- 7 -->
         <a href="https://www.coursera.org/account/accomplishments/verify/KPF4CKO0MEQP" target="_blank"
           rel="noopener noreferrer"
-          class="group p-4 rounded-2xl bg-white border border-neutral-200 shadow-sm flex flex-col justify-between hover:border-black transition-all">
+          class="group p-4 rounded-2xl bg-white dark:bg-[#151515] border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between hover:border-black dark:hover:border-neutral-500 transition-all">
           <div>
             <div class="flex items-center justify-between">
-              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400">CREDENTIAL 07</span>
-              <span class="text-xs text-neutral-400 group-hover:text-black transition-colors">↗</span>
+              <span class="text-[9px] font-mono uppercase tracking-widest text-neutral-400 dark:text-neutral-500">CREDENTIAL 07</span>
+              <span class="text-xs text-neutral-400 dark:text-neutral-500 group-hover:text-black dark:group-hover:text-white transition-colors">↗</span>
             </div>
-            <p class="text-xs font-bold uppercase text-neutral-900 mt-2 group-hover:underline">Operating Systems:
+            <p class="text-xs font-bold uppercase text-neutral-900 dark:text-neutral-100 mt-2 group-hover:underline">Operating Systems:
               Overview, Administration, and Security</p>
-            <span class="text-[10px] text-neutral-500 block mt-1">Coursera</span>
+            <span class="text-[10px] text-neutral-500 dark:text-neutral-400 block mt-1">Coursera</span>
           </div>
         </a>
       </div>
@@ -1142,24 +1314,24 @@
   <!-- END: Verified Certifications & Credentials Section -->
 
   <!-- BEGIN: Resume Section -->
-  <section class="w-full max-w-[1400px] mx-auto px-6 md:px-14 py-16 md:py-24 border-t border-neutral-200 text-center"
+  <section class="w-full max-w-[1400px] mx-auto px-6 md:px-14 py-16 md:py-24 border-t border-neutral-200 dark:border-neutral-800 text-center"
     id="resume" data-purpose="resume-section">
     <div class="max-w-3xl mx-auto flex flex-col items-center">
       <!-- Section Eyebrow Pill -->
       <div
-        class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-neutral-300 bg-white text-[10px] font-bold tracking-widest uppercase text-neutral-600 shadow-sm mb-6">
-        <span class="w-1.5 h-1.5 rounded-full bg-black"></span>
+        class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-[#151515] text-[10px] font-bold tracking-widest uppercase text-neutral-600 dark:text-neutral-400 shadow-sm mb-6">
+        <span class="w-1.5 h-1.5 rounded-full bg-black dark:bg-white"></span>
         <span>CURRICULUM VITAE</span>
       </div>
 
       <!-- Large Editorial Headline -->
       <h2
-        class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight text-neutral-900 leading-[1.05] mb-4 select-none">
+        class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-100 leading-[1.05] mb-4 select-none">
         INTERESTED IN WORKING TOGETHER?
       </h2>
 
       <!-- Supporting Text -->
-      <p class="text-xs sm:text-sm md:text-base text-neutral-600 max-w-xl mx-auto leading-relaxed font-normal mb-8">
+      <p class="text-xs sm:text-sm md:text-base text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto leading-relaxed font-normal mb-8">
         Explore my experience, technical skills, education, and certifications in my resume.
       </p>
 
@@ -1167,7 +1339,7 @@
       <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full sm:w-auto">
         <!-- View Resume Button -->
         <a href="assets/resume.pdf" target="_blank" rel="noopener noreferrer"
-          class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-all shadow-md hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all shadow-md hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:ring-offset-2"
           aria-label="View Priyansu Dash's resume PDF in a new tab">
           <span>VIEW RESUME</span>
           <span class="text-sm" aria-hidden="true">↗</span>
@@ -1175,7 +1347,7 @@
 
         <!-- Download PDF Button -->
         <a href="assets/resume.pdf" download="Priyansu-Dash-Resume.pdf"
-          class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-white text-black border border-neutral-300 hover:border-black text-xs font-bold uppercase tracking-wider hover:bg-neutral-50 transition-all shadow-sm hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-white dark:bg-[#151515] text-black dark:text-white border border-neutral-300 dark:border-neutral-700 hover:border-black dark:hover:border-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all shadow-sm hover:shadow-xl hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:ring-offset-2"
           aria-label="Download Priyansu Dash's resume as Priyansu-Dash-Resume.pdf">
           <span>DOWNLOAD PDF</span>
           <span class="text-sm" aria-hidden="true">↓</span>
@@ -1278,21 +1450,21 @@
   <div id="project-modal" onclick="if(event.target === this) closeProjectModal()"
     class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none flex items-center justify-center p-4">
     <div id="project-modal-card"
-      class="bg-white rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 md:p-9 shadow-2xl border border-neutral-100 opacity-0 scale-[0.94] translate-y-4 relative">
-      <div class="flex items-start justify-between pb-4 mb-5 border-b border-neutral-100">
+      class="bg-white dark:bg-[#151515] rounded-[32px] max-w-2xl w-full max-h-[90vh] overflow-y-auto no-scrollbar p-6 sm:p-8 md:p-9 shadow-2xl border border-neutral-100 dark:border-neutral-800 opacity-0 scale-[0.94] translate-y-4 relative">
+      <div class="flex items-start justify-between pb-4 mb-5 border-b border-neutral-100 dark:border-neutral-800">
         <div class="w-9 flex-shrink-0" aria-hidden="true"></div>
         <div class="flex-1 min-w-0 text-center px-2">
           <span id="modal-project-category"
-            class="block text-[11px] font-bold tracking-widest uppercase text-neutral-400 mb-1">CATEGORY</span>
+            class="block text-[11px] font-bold tracking-widest uppercase text-neutral-400 dark:text-neutral-500 mb-1">CATEGORY</span>
           <h3 id="modal-project-title"
-            class="text-2xl sm:text-3xl font-black uppercase text-neutral-900 tracking-tight break-words">
+            class="text-2xl sm:text-3xl font-black uppercase text-neutral-900 dark:text-neutral-100 tracking-tight break-words">
             PROJECT TITLE</h3>
         </div>
         <button type="button" onclick="closeProjectModal()"
-          class="flex-shrink-0 w-9 h-9 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-500 hover:border-black hover:text-black hover:bg-neutral-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+          class="flex-shrink-0 w-9 h-9 rounded-full border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-500 dark:text-neutral-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white focus-visible:ring-offset-2"
           aria-label="Close project details">✕</button>
       </div>
-      <div id="modal-project-body" class="space-y-5 text-sm text-neutral-700">
+      <div id="modal-project-body" class="space-y-5 text-sm text-neutral-700 dark:text-neutral-300">
         <!-- Injected dynamically -->
       </div>
     </div>
@@ -1302,43 +1474,44 @@
   <div id="contact-modal"
     class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
     <div id="contact-modal-card"
-      class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl transform scale-95 transition-transform duration-300">
-      <div class="flex justify-between items-center border-b border-neutral-200 pb-4 mb-4">
+      class="bg-white dark:bg-[#151515] rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-neutral-200 dark:border-neutral-800 transform scale-95 transition-transform duration-300">
+      <div class="flex justify-between items-center border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-4">
         <div>
-          <span class="text-[10px] font-bold tracking-widest uppercase text-neutral-400">START A CONVERSATION</span>
-          <h3 class="text-xl font-black uppercase text-neutral-900">LET'S BUILD SOMETHING MEANINGFUL</h3>
+          <span class="text-[10px] font-bold tracking-widest uppercase text-neutral-400 dark:text-neutral-500">START A CONVERSATION</span>
+          <h3 class="text-xl font-black uppercase text-neutral-900 dark:text-neutral-100">LET'S BUILD SOMETHING MEANINGFUL</h3>
         </div>
         <button onclick="closeContactModal()"
-          class="w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center text-neutral-600 hover:border-black hover:text-black">✕</button>
+          class="w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white"
+          aria-label="Close contact modal">✕</button>
       </div>
 
       <!-- Quick Verified Contact Info Strip -->
       <div
-        class="mb-5 p-3 rounded-2xl bg-neutral-50 border border-neutral-200 text-xs flex flex-wrap items-center justify-between gap-2">
-        <a href="mailto:pupuhari123@gmail.com" class="font-medium text-black hover:underline flex items-center gap-1.5">
+        class="mb-5 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs flex flex-wrap items-center justify-between gap-2">
+        <a href="mailto:pupuhari123@gmail.com" class="font-medium text-black dark:text-white hover:underline flex items-center gap-1.5">
           <span>✉</span> pupuhari123@gmail.com
         </a>
-        <a href="tel:+918249311964" class="font-medium text-black hover:underline flex items-center gap-1.5">
+        <a href="tel:+918249311964" class="font-medium text-black dark:text-white hover:underline flex items-center gap-1.5">
           <span>✆</span> +91 8249311964
         </a>
-        <span class="text-neutral-500 font-mono text-[10px]">Bhubaneswar, Odisha</span>
+        <span class="text-neutral-500 dark:text-neutral-400 font-mono text-[10px]">Bhubaneswar, Odisha</span>
       </div>
 
       <form id="contact-form" onsubmit="submitContactForm(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1">Your Name</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">Your Name</label>
           <input type="text" id="contact-name" required placeholder="John Doe"
-            class="w-full px-4 py-2.5 rounded-xl border border-neutral-300 focus:outline-none focus:border-black text-sm">
+            class="w-full px-4 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1E1E1E] text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-black dark:focus:border-white text-sm">
         </div>
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1">Email Address</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">Email Address</label>
           <input type="email" id="contact-email" required placeholder="john@company.com"
-            class="w-full px-4 py-2.5 rounded-xl border border-neutral-300 focus:outline-none focus:border-black text-sm">
+            class="w-full px-4 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1E1E1E] text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-black dark:focus:border-white text-sm">
         </div>
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1">Service Required</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">Service Required</label>
           <select id="contact-service"
-            class="w-full px-4 py-2.5 rounded-xl border border-neutral-300 focus:outline-none focus:border-black text-sm bg-white">
+            class="w-full px-4 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1E1E1E] text-neutral-900 dark:text-white focus:outline-none focus:border-black dark:focus:border-white text-sm">
             <option value="AI & Machine Learning">AI &amp; Machine Learning</option>
             <option value="Core Java & Backend Architecture">Core Java &amp; Backend Architecture</option>
             <option value="Full-Stack Web Development">Full-Stack Web Development</option>
@@ -1347,13 +1520,13 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 mb-1">Message</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300 mb-1">Message</label>
           <textarea id="contact-message" rows="3" required
             placeholder="Tell me about your project, goals, and collaboration..."
-            class="w-full px-4 py-2 rounded-xl border border-neutral-300 focus:outline-none focus:border-black text-sm"></textarea>
+            class="w-full px-4 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#1E1E1E] text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:border-black dark:focus:border-white text-sm"></textarea>
         </div>
         <button type="submit"
-          class="w-full py-3 bg-black text-white rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 transition">
+          class="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 dark:hover:bg-neutral-200 transition">
           SEND MESSAGE
         </button>
       </form>
@@ -1364,18 +1537,19 @@
   <div id="cart-modal"
     class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-4">
     <div id="cart-modal-card"
-      class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl transform scale-95 transition-transform duration-300">
-      <div class="flex justify-between items-center border-b border-neutral-200 pb-4 mb-4">
-        <h3 class="text-lg font-black uppercase text-neutral-900">SAVED PROJECTS</h3>
+      class="bg-white dark:bg-[#151515] rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-neutral-200 dark:border-neutral-800 transform scale-95 transition-transform duration-300">
+      <div class="flex justify-between items-center border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-4">
+        <h3 class="text-lg font-black uppercase text-neutral-900 dark:text-neutral-100">SAVED PROJECTS</h3>
         <button onclick="closeCartModal()"
-          class="w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center text-neutral-600 hover:border-black hover:text-black">✕</button>
+          class="w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white"
+          aria-label="Close saved projects modal">✕</button>
       </div>
       <div id="cart-items" class="py-4 space-y-3 min-h-[120px] max-h-[300px] overflow-y-auto">
-        <p class="text-xs text-neutral-400 text-center py-8">No saved items yet.</p>
+        <p class="text-xs text-neutral-400 dark:text-neutral-500 text-center py-8">No saved items yet.</p>
       </div>
-      <div class="border-t border-neutral-200 pt-4 mt-2">
+      <div class="border-t border-neutral-200 dark:border-neutral-800 pt-4 mt-2">
         <button onclick="closeCartModal()"
-          class="w-full py-3 bg-black text-white rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 transition">
+          class="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 dark:hover:bg-neutral-200 transition">
           CLOSE
         </button>
       </div>
@@ -1512,9 +1686,9 @@
       Object.keys(tabs).forEach(k => {
         if (!tabs[k]) return;
         if (k === filter) {
-          tabs[k].className = 'filter-tab px-6 py-2.5 rounded-full bg-black text-white text-xs font-semibold tracking-wider uppercase shadow-sm transition';
+          tabs[k].className = 'filter-tab px-6 py-2.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-semibold tracking-wider uppercase shadow-sm transition';
         } else {
-          tabs[k].className = 'filter-tab px-6 py-2.5 rounded-full bg-white border border-neutral-300 text-neutral-700 hover:border-black text-xs font-semibold tracking-wider uppercase transition';
+          tabs[k].className = 'filter-tab px-6 py-2.5 rounded-full bg-white dark:bg-[#151515] border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:border-black dark:hover:border-white text-xs font-semibold tracking-wider uppercase transition';
         }
       });
 
@@ -1543,19 +1717,19 @@
         const iconSvg = icon ? icon.querySelector('svg') : null;
 
         if (i === index && !isCurrentlyActive) {
-          item.className = 'accordion-item active w-full flex flex-col px-6 py-4 rounded-3xl border border-black bg-black text-white shadow-xl cursor-pointer transition-all transform scale-[1.01]';
+          item.className = 'accordion-item active w-full flex flex-col px-6 py-4 rounded-3xl border border-black dark:border-neutral-600 bg-black dark:bg-[#222222] text-white shadow-xl cursor-pointer transition-all transform scale-[1.01]';
           item.setAttribute('aria-expanded', 'true');
-          if (badge) badge.className = 'item-badge w-8 h-8 rounded-full border border-neutral-700 flex items-center justify-center text-xs font-medium text-neutral-300';
+          if (badge) badge.className = 'item-badge w-8 h-8 rounded-full border border-neutral-700 dark:border-neutral-600 flex items-center justify-center text-xs font-medium text-neutral-300';
           if (title) title.className = 'item-title text-xs md:text-sm font-bold tracking-widest uppercase text-white';
-          if (icon) icon.className = 'item-icon w-8 h-8 rounded-full border border-neutral-700 flex items-center justify-center transition-transform rotate-180';
+          if (icon) icon.className = 'item-icon w-8 h-8 rounded-full border border-neutral-700 dark:border-neutral-600 flex items-center justify-center transition-transform rotate-180';
           if (iconSvg) iconSvg.setAttribute('class', 'w-3.5 h-3.5 text-white transition-colors');
         } else {
-          item.className = 'accordion-item w-full flex flex-col px-6 py-4 rounded-3xl border border-neutral-300 bg-white hover:border-black transition-all cursor-pointer';
+          item.className = 'accordion-item w-full flex flex-col px-6 py-4 rounded-3xl border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-[#151515] hover:border-black dark:hover:border-neutral-600 transition-all cursor-pointer';
           item.setAttribute('aria-expanded', 'false');
-          if (badge) badge.className = 'item-badge w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center text-xs font-medium text-neutral-700';
-          if (title) title.className = 'item-title text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-800';
-          if (icon) icon.className = 'item-icon w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center transition-transform rotate-0';
-          if (iconSvg) iconSvg.setAttribute('class', 'w-3.5 h-3.5 text-neutral-700 transition-colors');
+          if (badge) badge.className = 'item-badge w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-xs font-medium text-neutral-700 dark:text-neutral-300';
+          if (title) title.className = 'item-title text-xs md:text-sm font-bold tracking-widest uppercase text-neutral-800 dark:text-neutral-200';
+          if (icon) icon.className = 'item-icon w-8 h-8 rounded-full border border-neutral-300 dark:border-neutral-700 flex items-center justify-center transition-transform rotate-0';
+          if (iconSvg) iconSvg.setAttribute('class', 'w-3.5 h-3.5 text-neutral-700 dark:text-neutral-300 transition-colors');
         }
       });
     }
@@ -1598,27 +1772,27 @@
       let html = '';
       if (data.src) {
         html += `
-          <div class="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border border-neutral-200/80 bg-neutral-100 shadow-inner">
+          <div class="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border border-neutral-200/80 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 shadow-inner">
             <img src="${data.src}" alt="${data.alt || title}" class="w-full h-full object-cover object-top" />
           </div>
         `;
       }
       if (data.description) {
-        html += `<p class="text-neutral-600 leading-relaxed font-normal text-sm sm:text-base text-center max-w-xl mx-auto">${data.description}</p>`;
+        html += `<p class="text-neutral-600 dark:text-neutral-300 leading-relaxed font-normal text-sm sm:text-base text-center max-w-xl mx-auto">${data.description}</p>`;
       }
       if (data.stats) {
         html += `
-          <div class="bg-neutral-50 p-4 rounded-2xl border border-neutral-200 text-center">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mb-1">Key Highlights</p>
-            <p class="text-xs text-neutral-800 font-medium">${data.stats}</p>
+          <div class="bg-neutral-50 dark:bg-neutral-900/80 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 text-center">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1">Key Highlights</p>
+            <p class="text-xs text-neutral-800 dark:text-neutral-200 font-medium">${data.stats}</p>
           </div>
         `;
       }
       if (data.deliverables && data.deliverables.length) {
         html += `
           <div>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-black mb-2 text-center">Key Deliverables</h4>
-            <ul class="list-disc pl-5 space-y-1 text-xs text-neutral-600 max-w-md mx-auto">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white mb-2 text-center">Key Deliverables</h4>
+            <ul class="list-disc pl-5 space-y-1 text-xs text-neutral-600 dark:text-neutral-400 max-w-md mx-auto">
               ${data.deliverables.map(d => `<li>${d}</li>`).join('')}
             </ul>
           </div>
@@ -1627,9 +1801,9 @@
       if (data.tools && data.tools.length) {
         html += `
           <div>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-black mb-2 text-center">Technologies & Stack</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-black dark:text-white mb-2 text-center">Technologies & Stack</h4>
             <div class="flex flex-wrap justify-center gap-2">
-              ${data.tools.map(t => `<span class="px-3 py-1 bg-neutral-100 border border-neutral-200 text-neutral-800 text-[10px] font-semibold rounded-full uppercase">${t}</span>`).join('')}
+              ${data.tools.map(t => `<span class="px-3 py-1 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-[10px] font-semibold rounded-full uppercase">${t}</span>`).join('')}
             </div>
           </div>
         `;
@@ -1637,7 +1811,7 @@
       if (data.link) {
         html += `
           <div class="pt-2 flex justify-center items-center">
-            <a href="${data.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 transition-all shadow-md hover:shadow-xl hover:scale-105 active:scale-95">
+            <a href="${data.link}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all shadow-md hover:shadow-xl hover:scale-105 active:scale-95">
               Visit Live Website ↗
             </a>
           </div>
@@ -1728,17 +1902,17 @@
       const list = document.getElementById('cart-items');
       const totalEl = document.getElementById('cart-total');
       if (cart.length === 0) {
-        list.innerHTML = `<p class="text-xs text-neutral-400 text-center py-8">Your bag is empty.</p>`;
+        list.innerHTML = `<p class="text-xs text-neutral-400 dark:text-neutral-500 text-center py-8">Your bag is empty.</p>`;
         totalEl.innerText = '$0.00';
       } else {
         let total = 0;
         list.innerHTML = cart.map((item, idx) => {
           total += item.price;
           return `
-            <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+            <div class="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
               <div>
-                <p class="text-xs font-bold text-black uppercase">${item.title}</p>
-                <p class="text-xs text-neutral-500 font-mono">$${item.price.toFixed(2)}</p>
+                <p class="text-xs font-bold text-black dark:text-white uppercase">${item.title}</p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 font-mono">$${item.price.toFixed(2)}</p>
               </div>
               <button onclick="removeFromCart(${idx})" class="text-xs text-red-500 hover:underline">Remove</button>
             </div>
@@ -1868,11 +2042,11 @@
             Object.keys(navLinks).forEach(k => {
               if (navLinks[k]) {
                 if (k === id) {
-                  navLinks[k].classList.add('border-neutral-300', 'text-black');
-                  navLinks[k].classList.remove('border-transparent', 'text-neutral-600');
+                  navLinks[k].classList.add('border-neutral-300', 'dark:border-neutral-600', 'text-black', 'dark:text-white');
+                  navLinks[k].classList.remove('border-transparent', 'text-neutral-600', 'dark:text-neutral-400');
                 } else {
-                  navLinks[k].classList.remove('border-neutral-300', 'text-black');
-                  navLinks[k].classList.add('border-transparent', 'text-neutral-600');
+                  navLinks[k].classList.remove('border-neutral-300', 'dark:border-neutral-600', 'text-black', 'dark:text-white');
+                  navLinks[k].classList.add('border-transparent', 'text-neutral-600', 'dark:text-neutral-400');
                 }
               }
             });
@@ -1892,7 +2066,315 @@
           }
         });
       });
+
+      // Synchronize theme toggle UI elements with active theme
+      updateThemeDOM(getTheme());
     }
+
+    // ============================================================
+    // THEME CONTROLLER & ORGANIC INK WASH FLOW (SHUIMOHUA)
+    // Multi-pool, slow, smooth ink diffusion across Xuan rice paper
+    // ============================================================
+    let activeInkAnimId = null;
+    let isInkTransitioning = false;
+
+    // Harmonic frequencies simulating fibrous rice paper capillary bleed and undulating waves
+    const INK_HARMONICS = [
+      { k: 3, a: 0.17, p: 0.45, speed: 0.75 },
+      { k: 5, a: 0.13, p: 1.85, speed: 1.15 },
+      { k: 7, a: 0.09, p: 3.20, speed: 1.65 },
+      { k: 11, a: 0.05, p: 0.95, speed: 2.20 },
+      { k: 17, a: 0.03, p: 2.40, speed: 2.85 },
+      { k: 23, a: 0.018, p: 1.10, speed: 3.50 }
+    ];
+
+    /**
+     * Generates a closed organic SVG path for an ink pool with harmonic lobes,
+     * time-dependent liquid undulation, and capillary spline interpolation.
+     */
+    function generateSingleInkPool(cx, cy, R, timeProgress, seedOffset) {
+      if (R <= 2) return '';
+      const numPoints = 72;
+      const points = [];
+
+      for (let i = 0; i < numPoints; i++) {
+        const theta = (i / numPoints) * Math.PI * 2;
+        let mod = 1.0;
+
+        for (let h = 0; h < INK_HARMONICS.length; h++) {
+          const harm = INK_HARMONICS[h];
+          const phase = harm.p + seedOffset + harm.speed * timeProgress * 3.8;
+          mod += harm.a * Math.cos(harm.k * theta + phase);
+        }
+
+        const r = Math.max(1, R * mod);
+        points.push({
+          x: cx + r * Math.cos(theta),
+          y: cy + r * Math.sin(theta)
+        });
+      }
+
+      // Smooth Catmull-Rom to Cubic Bézier spline interpolation
+      let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+      for (let i = 0; i < points.length; i++) {
+        const p0 = points[(i - 1 + points.length) % points.length];
+        const p1 = points[i];
+        const p2 = points[(i + 1) % points.length];
+        const p3 = points[(i + 2) % points.length];
+
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+        d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+      }
+      d += ' Z';
+      return d;
+    }
+
+    /**
+     * Defines the interconnected organic ink nodes (tributaries and pools)
+     * distributed dynamically across the paper canvas based on the origin click.
+     */
+    function getInkFlowNodes(originX, originY, w, h) {
+      const diag = Math.hypot(w, h);
+      const isRightToLeft = originX > w * 0.5;
+
+      const mapX = (normX) => isRightToLeft ? normX * w : (1 - normX) * w;
+
+      return [
+        // Node 0: Initial ink drop at clicked button
+        { cx: originX, cy: originY, startT: 0.00, maxR: diag * 0.32, seed: 0.0 },
+        // Node 1: Primary diagonal branch creeping toward center-right
+        {
+          cx: isRightToLeft ? originX * 0.68 + w * 0.16 : originX * 0.68 + w * 0.16,
+          cy: originY * 0.40 + h * 0.22,
+          startT: 0.10,
+          maxR: diag * 0.35,
+          seed: 1.4
+        },
+        // Node 2: Deep central ink pool blooming across the page center
+        { cx: w * 0.50, cy: h * 0.46, startT: 0.22, maxR: diag * 0.38, seed: 2.7 },
+        // Node 3: Lateral stream advancing along the right/lower flank
+        { cx: mapX(0.82), cy: h * 0.70, startT: 0.32, maxR: diag * 0.34, seed: 3.9 },
+        // Node 4: Stream advancing to upper-left flank
+        { cx: mapX(0.25), cy: h * 0.32, startT: 0.42, maxR: diag * 0.36, seed: 4.8 },
+        // Node 5: Lower flank swell advancing toward bottom-left corner
+        { cx: mapX(0.20), cy: h * 0.82, startT: 0.52, maxR: diag * 0.36, seed: 5.6 },
+        // Node 6: Bottom-center merge securing the base
+        { cx: w * 0.50, cy: h * 0.90, startT: 0.60, maxR: diag * 0.36, seed: 6.3 },
+        // Node 7: Opposite top corner sweeper
+        { cx: mapX(0.06), cy: h * 0.08, startT: 0.68, maxR: diag * 0.34, seed: 7.1 },
+        // Node 8: Far bottom corner sweeper for 100% full perimeter closure
+        { cx: mapX(0.94), cy: h * 0.94, startT: 0.72, maxR: diag * 0.30, seed: 8.0 }
+      ];
+    }
+
+    /**
+     * Renders the complete multi-pool ink state for progress t in [0, 1]
+     */
+    function renderInkFrame(t, originX, originY) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const renderPath = document.getElementById('ink-render-path');
+      const clipShape = document.getElementById('ink-clip-path-el');
+      const satGroup = document.getElementById('ink-render-satellites');
+      const clipSatGroup = document.getElementById('ink-clip-satellites');
+
+      if (t <= 0.001) {
+        if (renderPath) renderPath.setAttribute('d', '');
+        if (clipShape) clipShape.setAttribute('d', '');
+        if (satGroup) satGroup.innerHTML = '';
+        if (clipSatGroup) clipSatGroup.innerHTML = '';
+        return;
+      }
+
+      const nodes = getInkFlowNodes(originX, originY, w, h);
+      let combinedPath = '';
+      let satHtml = '';
+
+      nodes.forEach((node) => {
+        if (t > node.startT) {
+          const localT = Math.min(1, (t - node.startT) / (1 - node.startT));
+          // Fluid expansion: smooth onset, continuous flow, gentle finish
+          const localEase = Math.pow(localT, 1.42);
+          const currentR = node.maxR * localEase;
+
+          if (currentR > 2) {
+            combinedPath += generateSingleInkPool(node.cx, node.cy, currentR, t, node.seed) + ' ';
+
+            // Satellite droplets ahead of active advancing fronts
+            if (localT > 0.12 && localT < 0.82) {
+              const satCount = 2;
+              for (let s = 0; s < satCount; s++) {
+                const sAngle = node.seed + s * 2.25 + t * 2.8;
+                const sDist = currentR * (1.20 + s * 0.15);
+                const sRadius = Math.max(2.5, currentR * 0.055);
+                const sx = node.cx + sDist * Math.cos(sAngle);
+                const sy = node.cy + sDist * Math.sin(sAngle);
+                satHtml += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${sRadius.toFixed(1)}" />`;
+              }
+            }
+          }
+        }
+      });
+
+      const trimmedPath = combinedPath.trim();
+      if (renderPath) renderPath.setAttribute('d', trimmedPath);
+      if (clipShape) clipShape.setAttribute('d', trimmedPath);
+      if (satGroup) satGroup.innerHTML = satHtml;
+      if (clipSatGroup) clipSatGroup.innerHTML = satHtml;
+    }
+
+    function getTheme() {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+
+    function updateThemeDOM(theme) {
+      const isDark = theme === 'dark';
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        try { localStorage.setItem('echo_theme', 'dark'); } catch (e) {}
+      } else {
+        document.documentElement.classList.remove('dark');
+        try { localStorage.setItem('echo_theme', 'light'); } catch (e) {}
+      }
+
+      // Update meta theme-color for browser chrome
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', isDark ? '#0B0B0B' : '#FAFAFA');
+      }
+
+      // Update Desktop Theme Toggle Button ARIA & Title
+      const toggleBtn = document.getElementById('theme-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        toggleBtn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+
+      // Update Mobile Theme Toggle Button ARIA & UI Text
+      const mobileBtn = document.getElementById('mobile-theme-toggle-btn');
+      const mobileText = document.getElementById('mobile-theme-text');
+      const mobileIcon = document.getElementById('mobile-theme-icon');
+      if (mobileBtn) {
+        mobileBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+      }
+      if (mobileText) {
+        mobileText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+      }
+      if (mobileIcon) {
+        mobileIcon.textContent = isDark ? '☼' : '☾';
+      }
+    }
+
+    function handleThemeToggle(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      const currentTheme = getTheme();
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      const isNextDark = nextTheme === 'dark';
+
+      // 1. Calculate exact viewport coordinates from the clicked button
+      let x = window.innerWidth - 80;
+      let y = 30;
+      if (event) {
+        const trigger = event.currentTarget || event.target;
+        if (trigger && typeof trigger.getBoundingClientRect === 'function') {
+          const rect = trigger.getBoundingClientRect();
+          x = Math.round(rect.left + rect.width / 2);
+          y = Math.round(rect.top + rect.height / 2);
+        } else if (typeof event.clientX === 'number' && event.clientX > 0) {
+          x = Math.round(event.clientX);
+          y = Math.round(event.clientY);
+        }
+      }
+
+      // 2. Check for prefers-reduced-motion
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        updateThemeDOM(nextTheme);
+        return;
+      }
+
+      // Cancel any ongoing ink transition cleanly to prevent stuck overlays
+      if (activeInkAnimId) {
+        cancelAnimationFrame(activeInkAnimId);
+        activeInkAnimId = null;
+      }
+
+      const svgOverlay = document.getElementById('ink-transition-svg');
+      if (svgOverlay) {
+        svgOverlay.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+        svgOverlay.style.display = 'block';
+      }
+
+      // Natural fluid capillary easing curve:
+      // Gentle beginning, continuous steady spreading throughout the middle, and soft smooth finish
+      function inkEase(t) {
+        return t < 0.5
+          ? 0.5 * Math.pow(2 * t, 1.45)
+          : 1 - 0.5 * Math.pow(2 * (1 - t), 1.45);
+      }
+
+      // Transition duration set to 2.2 seconds for slow, smooth, contemplative ink diffusion
+      const duration = 2200;
+      let startTime = null;
+
+      // 3. Organic Ink Wash Flow Animation
+      isInkTransitioning = true;
+      startTime = performance.now();
+      let themeSwitched = false;
+
+      // In Dark -> Light (Reverse): switch DOM theme immediately underneath so white paper is revealed
+      if (!isNextDark) {
+        updateThemeDOM('light');
+        themeSwitched = true;
+        renderInkFrame(1.0, x, y);
+      } else {
+        renderInkFrame(0.01, x, y);
+      }
+
+      function inkStep(now) {
+        const elapsed = now - startTime;
+        const rawProgress = Math.min(1, elapsed / duration);
+        const eased = inkEase(rawProgress);
+
+        // Forward (Light -> Dark): ink expands organically from 0.01 -> 1.0
+        // Reverse (Dark -> Light): ink dissolves & recedes organically from 1.0 -> 0.0
+        const currentT = isNextDark
+          ? 0.01 + 0.99 * eased
+          : 1.0 * (1 - eased);
+
+        renderInkFrame(currentT, x, y);
+
+        // For Light -> Dark: switch DOM to dark as the ink wash blankets the canvas (at 92% coverage)
+        if (isNextDark && !themeSwitched && rawProgress >= 0.92) {
+          updateThemeDOM('dark');
+          themeSwitched = true;
+        }
+
+        if (rawProgress < 1) {
+          activeInkAnimId = requestAnimationFrame(inkStep);
+        } else {
+          updateThemeDOM(nextTheme);
+          isInkTransitioning = false;
+          activeInkAnimId = null;
+          if (svgOverlay) {
+            svgOverlay.style.display = 'none';
+            renderInkFrame(0, x, y);
+          }
+        }
+      }
+
+      activeInkAnimId = requestAnimationFrame(inkStep);
+    }
+
+    window.handleThemeToggle = handleThemeToggle;
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initApp);

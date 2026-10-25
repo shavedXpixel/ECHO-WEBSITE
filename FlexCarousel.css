@@ -140,3 +140,27 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   DARK MODE ADAPTATIONS FOR FLEXCAROUSEL
+   ============================================================ */
+.dark .flex-carousel__title {
+  color: #F5F5F5;
+}
+
+.dark .flex-carousel__subtitle {
+  color: #A3A3A3;
+}
+
+.dark .flex-carousel__count {
+  color: #A3A3A3;
+}
+
+.dark .flex-carousel__slash {
+  color: #737373;
+}
+
+.dark .flex-carousel:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+

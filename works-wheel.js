@@ -140,14 +140,14 @@ export function initWorksWheel(container, options = {}) {
 
   const section = document.createElement("section");
   section.setAttribute("aria-label", label);
-  section.className = "relative w-full h-full min-h-[24rem] overflow-hidden select-none bg-transparent text-neutral-900";
+  section.className = "relative w-full h-full min-h-[24rem] overflow-hidden select-none bg-transparent text-neutral-900 dark:text-neutral-100";
 
   // Stage (perspective container)
   const stageEl = document.createElement("div");
   stageEl.tabIndex = 0;
   stageEl.role = "listbox";
   stageEl.setAttribute("aria-label", label);
-  stageEl.className = "absolute inset-0 cursor-grab touch-pan-x outline-none focus-visible:outline-2 focus-visible:outline-neutral-900 focus-visible:-outline-offset-4 active:cursor-grabbing";
+  stageEl.className = "absolute inset-0 cursor-grab touch-pan-x outline-none focus-visible:outline-2 focus-visible:outline-neutral-900 dark:focus-visible:outline-white focus-visible:-outline-offset-4 active:cursor-grabbing";
 
   // Wheel (preserve-3d anchor)
   const wheelEl = document.createElement("div");
@@ -163,12 +163,12 @@ export function initWorksWheel(container, options = {}) {
     card.tabIndex = 0;
     card.setAttribute("aria-selected", i === 0 ? "true" : "false");
     card.setAttribute("aria-label", `${item.title} — Click or press Enter to view details`);
-    card.className = "group absolute cursor-pointer pointer-events-auto [backface-visibility:hidden] focus-visible:ring-2 focus-visible:ring-black rounded-2xl outline-none";
+    card.className = "group absolute cursor-pointer pointer-events-auto [backface-visibility:hidden] focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white rounded-2xl outline-none";
     card.style.transformStyle = "preserve-3d";
     card.style.willChange = "transform, opacity";
 
     const face = document.createElement("div");
-    face.className = "relative block w-full h-full overflow-hidden rounded-2xl bg-white border border-neutral-300/80 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-300 hover:shadow-[0_28px_50px_-10px_rgba(0,0,0,0.22)] hover:border-neutral-500";
+    face.className = "relative block w-full h-full overflow-hidden rounded-2xl bg-white dark:bg-[#181818] border border-neutral-300/80 dark:border-neutral-700/80 shadow-[0_20px_45px_-15px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.6)] transition-all duration-300 hover:shadow-[0_28px_50px_-10px_rgba(0,0,0,0.22)] hover:border-neutral-500 dark:hover:border-neutral-400";
     face.style.willChange = "transform";
     face.style.transformOrigin = "center center";
 
@@ -199,7 +199,7 @@ export function initWorksWheel(container, options = {}) {
     viewBtn.href = item.href || item.link;
     viewBtn.target = "_blank";
     viewBtn.rel = "noopener noreferrer";
-    viewBtn.className = "view-project-btn pointer-events-auto cursor-pointer bg-white/95 hover:bg-white text-neutral-900 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1 hover:scale-105 active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-black";
+    viewBtn.className = "view-project-btn pointer-events-auto cursor-pointer bg-white/95 hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 dark:border dark:border-neutral-600 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1 hover:scale-105 active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white";
     viewBtn.setAttribute("aria-label", `View ${item.title} repository in a new tab`);
     viewBtn.setAttribute("title", `Open ${item.title} repository in new tab`);
     viewBtn.innerHTML = `<span>${action} ↗</span>`;
@@ -253,19 +253,19 @@ export function initWorksWheel(container, options = {}) {
 
   // Center ring label ("Works '26" or "Landing Pages")
   const labelEl = document.createElement("div");
-  labelEl.className = "pointer-events-none absolute inset-0 grid place-items-center tracking-tight font-black uppercase text-center text-neutral-900 select-none z-10 transition-opacity duration-300";
+  labelEl.className = "pointer-events-none absolute inset-0 grid place-items-center tracking-tight font-black uppercase text-center text-neutral-900 dark:text-neutral-100 select-none z-10 transition-opacity duration-300";
   labelEl.textContent = label;
   section.appendChild(labelEl);
 
   // Front-card title - responsive positioning prevents any card collision
   const titleEl = document.createElement("div");
-  titleEl.className = "pointer-events-none absolute tracking-tight font-black uppercase text-neutral-900 opacity-0 select-none z-10 leading-[1.05] transition-opacity duration-300";
+  titleEl.className = "pointer-events-none absolute tracking-tight font-black uppercase text-neutral-900 dark:text-white opacity-0 select-none z-10 leading-[1.05] transition-opacity duration-300";
   titleEl.textContent = items[0] ? items[0].title : "";
   section.appendChild(titleEl);
 
   // Side Index List
   const indexList = document.createElement("ol");
-  indexList.className = "text-neutral-500 absolute top-[7%] right-[3%] text-right leading-[1.75] z-20 space-y-0.5 select-none font-mono";
+  indexList.className = "text-neutral-500 dark:text-neutral-400 absolute top-[7%] right-[3%] text-right leading-[1.75] z-20 space-y-0.5 select-none font-mono";
   const indexButtons = [];
 
   items.forEach((item, i) => {
@@ -274,11 +274,11 @@ export function initWorksWheel(container, options = {}) {
     btn.type = "button";
     btn.setAttribute("aria-label", `Jump to project: ${item.title}`);
     if (i === 0) {
-      btn.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-black mr-2 align-middle"></span><span class="text-neutral-900 font-extrabold underline decoration-2 underline-offset-4">${item.title}</span>`;
+      btn.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-black dark:bg-white mr-2 align-middle"></span><span class="text-neutral-900 dark:text-white font-extrabold underline decoration-2 underline-offset-4">${item.title}</span>`;
       btn.className = "cursor-pointer transition-all duration-200 text-[10px] md:text-xs tracking-wider outline-none block ml-auto scale-105";
     } else {
       btn.innerHTML = `<span>${item.title}</span>`;
-      btn.className = "cursor-pointer transition-all duration-200 text-[10px] md:text-xs tracking-wider outline-none text-neutral-400 hover:text-neutral-900 block ml-auto";
+      btn.className = "cursor-pointer transition-all duration-200 text-[10px] md:text-xs tracking-wider outline-none text-neutral-400 dark:text-neutral-500 hover:text-neutral-900 dark:hover:text-white block ml-auto";
     }
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -292,7 +292,7 @@ export function initWorksWheel(container, options = {}) {
 
   // Bottom helper pill
   const hintPill = document.createElement("div");
-  hintPill.className = "pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-neutral-200 shadow-sm backdrop-blur-md text-[10px] md:text-[11px] font-mono text-neutral-600 uppercase tracking-wider";
+  hintPill.className = "pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 dark:bg-[#181818]/90 border border-neutral-200 dark:border-neutral-800 shadow-sm backdrop-blur-md text-[10px] md:text-[11px] font-mono text-neutral-600 dark:text-neutral-300 uppercase tracking-wider";
   hintPill.innerHTML = `
     <svg class="w-3 h-3 text-neutral-500 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -499,11 +499,11 @@ export function initWorksWheel(container, options = {}) {
 
     indexButtons.forEach((btn, idx) => {
       if (idx === near) {
-        btn.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-black mr-2 align-middle"></span><span class="text-neutral-900 font-extrabold underline decoration-2 underline-offset-4">${items[idx].title}</span>`;
+        btn.innerHTML = `<span class="inline-block w-1.5 h-1.5 rounded-full bg-black dark:bg-white mr-2 align-middle"></span><span class="text-neutral-900 dark:text-white font-extrabold underline decoration-2 underline-offset-4">${items[idx].title}</span>`;
         btn.className = "cursor-pointer transition-all duration-200 text-[10px] md:text-xs tracking-wider outline-none block ml-auto scale-105";
       } else {
         btn.innerHTML = `<span>${items[idx].title}</span>`;
-        btn.className = "cursor-pointer transition-all duration-200 text-[10px] md:text-xs tracking-wider outline-none text-neutral-400 hover:text-neutral-900 block ml-auto";
+        btn.className = "cursor-pointer transition-all duration-200 text-[10px] md:text-xs tracking-wider outline-none text-neutral-400 dark:text-neutral-500 hover:text-neutral-900 dark:hover:text-white block ml-auto";
       }
     });
 
